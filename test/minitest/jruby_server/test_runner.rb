@@ -76,7 +76,9 @@ class TestRunner < Minitest::Test
 
   def run_runner(**kwargs)
     saved = Minitest::Runnable.runnables.dup
-    Minitest::Runnable.runnables.delete(self.class)
+    # Keep only RunnerDemoTest — other test classes from parallel test files
+    # may have DRb dependencies or side effects that fail in this context
+    Minitest::Runnable.runnables.replace([RunnerDemoTest])
     @runner.run(**kwargs)
   ensure
     Minitest::Runnable.runnables.replace(saved)

@@ -19,7 +19,7 @@ module Minitest
         install_signal_handlers
         at_exit { cleanup }
 
-        DRb.thread.join
+        DRb.thread&.join
       end
 
       def stop

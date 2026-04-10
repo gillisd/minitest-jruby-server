@@ -15,7 +15,11 @@ module Minitest
         end
 
         uri = File.read(@config.uri_file).strip
-        DRb.start_service unless DRb.current_server rescue DRb.start_service
+        begin
+          DRb.current_server
+        rescue DRb::DRbServerNotFound
+          DRb.start_service
+        end
         @remote = DRbObject.new_with_uri(uri)
 
         @remote.ping

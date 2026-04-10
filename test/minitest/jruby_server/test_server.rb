@@ -4,6 +4,8 @@ require "tmpdir"
 require "fileutils"
 
 class TestServer < Minitest::Test
+  i_suck_and_my_tests_are_order_dependent!
+
   def setup
     @tmpdir = Dir.mktmpdir("minitest-server-test")
     @uri_file = File.join(@tmpdir, "test.uri")
@@ -19,10 +21,20 @@ class TestServer < Minitest::Test
     FileUtils.rm_rf(@tmpdir)
   end
 
+  private
+
+  def wait_for_uri_file(path)
+    50.times do
+      return if File.exist?(path) && File.size?(path)
+      Thread.pass
+      Kernel.sleep(0.01)
+    end
+  end
+
   def test_start_writes_uri_file
     server = Minitest::JRubyServer::Server.new(daemon: @daemon, config: @config)
     thread = Thread.new { server.start }
-    Thread.pass until File.exist?(@uri_file)
+    wait_for_uri_file(@uri_file)
 
     assert File.exist?(@uri_file)
     uri = File.read(@uri_file).strip
@@ -35,7 +47,7 @@ class TestServer < Minitest::Test
   def test_stop_removes_uri_file
     server = Minitest::JRubyServer::Server.new(daemon: @daemon, config: @config)
     thread = Thread.new { server.start }
-    Thread.pass until File.exist?(@uri_file)
+    wait_for_uri_file(@uri_file)
 
     server.stop
     refute File.exist?(@uri_file)
@@ -46,10 +58,10 @@ class TestServer < Minitest::Test
   def test_daemon_accessible_via_drb
     server = Minitest::JRubyServer::Server.new(daemon: @daemon, config: @config)
     thread = Thread.new { server.start }
-    Thread.pass until File.exist?(@uri_file)
+    wait_for_uri_file(@uri_file)
 
     uri = File.read(@uri_file).strip
-    DRb.start_service
+    begin; DRb.current_server; rescue DRb::DRbServerNotFound; DRb.start_service; end
     remote = DRbObject.new_with_uri(uri)
     assert_equal :pong, remote.ping
   ensure

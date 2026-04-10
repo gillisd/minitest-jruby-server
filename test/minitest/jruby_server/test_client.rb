@@ -46,7 +46,7 @@ class TestClient < Minitest::Test
     daemon = Minitest::JRubyServer::Daemon.new
     server = Minitest::JRubyServer::Server.new(daemon: daemon, config: config)
     thread = Thread.new { server.start }
-    Thread.pass until File.exist?(uri_file)
+    50.times { break if File.exist?(uri_file) && File.size?(uri_file); Thread.pass; Kernel.sleep(0.01) }
 
     yield config
   ensure
