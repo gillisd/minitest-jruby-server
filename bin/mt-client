@@ -1,0 +1,107 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "optparse"
+
+options = { runs: 1 }
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: mt-client [options]"
+
+  opts.on("--uri-file PATH", "URI file location") do |v|
+    options[:uri_file] = v
+  end
+
+  opts.on("-s", "--seed SEED", Integer, "Random seed") do |v|
+    options[:seed] = v
+  end
+
+  opts.on("-i", "--include PATTERN", "Include filter (/regexp/ or string)") do |v|
+    options[:include_filter] = v
+  end
+
+  opts.on("-e", "--exclude PATTERN", "Exclude filter") do |v|
+    options[:exclude_filter] = v
+  end
+
+  opts.on("-r", "--runs N", Integer, "Number of iterations (default: 1)") do |v|
+    options[:runs] = v
+  end
+
+  opts.on("--info", "Show server info only") do
+    options[:info] = true
+  end
+
+  opts.on("--shutdown", "Shut down the server") do
+    options[:shutdown] = true
+  end
+
+  opts.on("-v", "--verbose", "Show full test output") do
+    options[:verbose] = true
+  end
+
+  opts.on("-h", "--help", "Show this help") do
+    puts opts
+    exit
+  end
+
+  opts.on("-V", "--version", "Show version") do
+    $LOAD_PATH.unshift File.join(__dir__, "..", "lib")
+    require "minitest/jruby_server/version"
+    puts "mt-client #{Minitest::JRubyServer::VERSION}"
+    exit
+  end
+end.parse!
+
+$LOAD_PATH.unshift File.join(__dir__, "..", "lib")
+require "minitest/jruby_server"
+
+config = Minitest::JRubyServer::Config.new(
+  **options.slice(:uri_file, :project_root).compact
+)
+client = Minitest::JRubyServer::Client.new(config: config)
+fmt = Minitest::JRubyServer::ResultFormatter.new
+
+begin
+  client.connect
+rescue Minitest::JRubyServer::ServerNotRunning => e
+  $stderr.puts e.message
+  exit 1
+rescue Minitest::JRubyServer::ConnectionError => e
+  $stderr.puts e.message
+  exit 1
+end
+
+if options[:info]
+  fmt.print_server_info(client.info)
+  exit
+end
+
+if options[:shutdown]
+  client.shutdown_server
+  puts "Server shut down."
+  exit
+end
+
+fmt.print_server_info(client.info)
+
+times = []
+options[:runs].times do |i|
+  seed = options[:seed] ? options[:seed] + i : nil
+  result = client.run_tests(
+    seed: seed,
+    include_filter: options[:include_filter],
+    exclude_filter: options[:exclude_filter],
+  )
+
+  t = result[:time]
+  times << t
+  fmt.print_run_result(result)
+
+  if options[:verbose]
+    puts result[:output]
+    puts
+  end
+end
+
+fmt.print_summary(times: times, runs: options[:runs]) if options[:runs] > 1
