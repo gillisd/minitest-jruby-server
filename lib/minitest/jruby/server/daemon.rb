@@ -1,3 +1,4 @@
+require "English"
 module Minitest
   module Jruby
     module Server
@@ -20,10 +21,10 @@ module Minitest
 
         def info
           {
-            engine:      engine_string,
-            pid:         $$,
+            engine: engine_string,
+            pid: $PROCESS_ID,
             runs_so_far: @run_count,
-            uptime:      Process.clock_gettime(Process::CLOCK_MONOTONIC) - @started_at,
+            uptime: Process.clock_gettime(Process::CLOCK_MONOTONIC) - @started_at,
           }
         end
 

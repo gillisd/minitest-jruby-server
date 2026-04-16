@@ -39,29 +39,29 @@ module Minitest
           return unless File.exist?(@config.uri_file)
 
           old_uri = File.read(@config.uri_file).strip
-          if old_uri =~ /\.(\d+)$/
-            pid = $1.to_i
-            begin
-              Process.kill(0, pid)
-              raise ServerAlreadyRunning,
-                "Server already running (PID #{pid}). URI file: #{@config.uri_file}"
-            rescue Errno::ESRCH
-              File.delete(@config.uri_file) # stale file, remove it
-            rescue Errno::EPERM
-              raise ServerAlreadyRunning,
-                "Server already running (PID #{pid}, not owned by this user)"
-            end
+          return unless old_uri =~ /\.(\d+)$/
+
+          pid = ::Regexp.last_match(1).to_i
+          begin
+            Process.kill(0, pid)
+            raise ServerAlreadyRunning,
+                  "Server already running (PID #{pid}). URI file: #{@config.uri_file}"
+          rescue Errno::ESRCH
+            File.delete(@config.uri_file) # stale file, remove it
+          rescue Errno::EPERM
+            raise ServerAlreadyRunning,
+                  "Server already running (PID #{pid}, not owned by this user)"
           end
         end
 
         def cleanup
-          File.delete(@config.uri_file) if File.exist?(@config.uri_file)
+          FileUtils.rm_f(@config.uri_file)
         end
 
         def install_signal_handlers
           %w[INT TERM].each do |sig|
             trap(sig) do
-              $stderr.puts "\n[mt-server] Shutting down..."
+              warn "\n[mt-server] Shutting down..."
               stop
               exit
             end

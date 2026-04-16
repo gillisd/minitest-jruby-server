@@ -12,7 +12,7 @@ module Minitest
         def connect
           unless File.exist?(@config.uri_file)
             raise ServerNotRunning,
-              "No server found at #{@config.uri_file}. Start one with: mt-server"
+                  "No server found at #{@config.uri_file}. Start one with: mt-server"
           end
 
           uri = File.read(@config.uri_file).strip
@@ -27,7 +27,7 @@ module Minitest
           self
         rescue DRb::DRbConnError => e
           raise ConnectionError,
-            "Server at #{uri} is not responding: #{e.message}"
+                "Server at #{uri} is not responding: #{e.message}"
         end
 
         def connected?

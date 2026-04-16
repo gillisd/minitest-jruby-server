@@ -1,6 +1,4 @@
 #!/usr/bin/env ruby
-# frozen_string_literal: true
-
 require "bundler/setup"
 require "optparse"
 
@@ -44,7 +42,7 @@ require "minitest/jruby/server"
 config = Minitest::Jruby::Server::Config.new(**options.compact)
 
 # Boot
-$stderr.puts "[mt-server] Booting on #{RUBY_ENGINE} #{RUBY_ENGINE_VERSION}..."
+warn "[mt-server] Booting on #{RUBY_ENGINE} #{RUBY_ENGINE_VERSION}..."
 boot_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
 loader = Minitest::Jruby::Server::TestLoader.new(config: config)
@@ -58,15 +56,15 @@ srand 0
 boot_time = Process.clock_gettime(Process::CLOCK_MONOTONIC) - boot_start
 suites = loader.loaded_suites
 
-$stderr.puts "[mt-server] Boot complete in %.4fs" % boot_time
-$stderr.puts "[mt-server] #{suites.size} suites, #{suites.flat_map { |s| s.methods_matching(/^test_/) }.size} methods"
+warn "[mt-server] Boot complete in %.4fs" % boot_time
+warn "[mt-server] #{suites.size} suites, #{suites.flat_map { |s| s.methods_matching(/^test_/) }.size} methods"
 
 # Serve
 daemon = Minitest::Jruby::Server::Daemon.new
 server = Minitest::Jruby::Server::Server.new(daemon: daemon, config: config)
 
-$stderr.puts "[mt-server] Listening at #{server.uri}"
-$stderr.puts "[mt-server] URI file: #{config.uri_file}"
-$stderr.puts "[mt-server] Ctrl-C to stop"
+warn "[mt-server] Listening at #{server.uri}"
+warn "[mt-server] URI file: #{config.uri_file}"
+warn "[mt-server] Ctrl-C to stop"
 
 server.start

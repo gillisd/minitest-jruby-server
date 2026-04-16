@@ -1,3 +1,4 @@
+require "English"
 require "tmpdir"
 
 module Minitest
@@ -18,7 +19,7 @@ module Minitest
         end
 
         def socket_path
-          File.join(socket_dir, "minitest_jruby.#{$$}")
+          File.join(socket_dir, "minitest_jruby.#{$PROCESS_ID}")
         end
 
         def uri

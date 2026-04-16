@@ -1,6 +1,4 @@
 #!/usr/bin/env ruby
-# frozen_string_literal: true
-
 require "bundler/setup"
 require "optparse"
 
@@ -56,7 +54,7 @@ end.parse!
 require "minitest/jruby/server"
 
 config = Minitest::Jruby::Server::Config.new(
-  **options.slice(:uri_file, :project_root).compact
+  **options.slice(:uri_file, :project_root).compact,
 )
 client = Minitest::Jruby::Server::Client.new(config: config)
 fmt = Minitest::Jruby::Server::ResultFormatter.new
@@ -64,10 +62,10 @@ fmt = Minitest::Jruby::Server::ResultFormatter.new
 begin
   client.connect
 rescue Minitest::Jruby::Server::ServerNotRunning => e
-  $stderr.puts e.message
+  warn e.message
   exit 1
 rescue Minitest::Jruby::Server::ConnectionError => e
-  $stderr.puts e.message
+  warn e.message
   exit 1
 end
 

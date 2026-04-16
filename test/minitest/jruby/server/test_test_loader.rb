@@ -30,6 +30,7 @@ class TestTestLoader < Minitest::Test
   def test_discovers_test_files
     config = Minitest::Jruby::Server::Config.new(project_root: @dir)
     loader = Minitest::Jruby::Server::TestLoader.new(config: config)
+
     assert_includes loader.test_files.map { |f| File.basename(f) }, "widget_test.rb"
   end
 

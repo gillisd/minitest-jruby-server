@@ -11,13 +11,13 @@ class TestServer < Minitest::Test
     @uri_file = File.join(@tmpdir, "test.uri")
     @config = Minitest::Jruby::Server::Config.new(
       uri_file: @uri_file,
-      socket_dir: @tmpdir
+      socket_dir: @tmpdir,
     )
     @daemon = Minitest::Jruby::Server::Daemon.new
   end
 
   def teardown
-    File.delete(@uri_file) if File.exist?(@uri_file)
+    FileUtils.rm_f(@uri_file)
     FileUtils.rm_rf(@tmpdir)
   end
 
@@ -26,6 +26,7 @@ class TestServer < Minitest::Test
   def wait_for_uri_file(path)
     50.times do
       return if File.exist?(path) && File.size?(path)
+
       Thread.pass
       Kernel.sleep(0.01)
     end
@@ -36,8 +37,9 @@ class TestServer < Minitest::Test
     thread = Thread.new { server.start }
     wait_for_uri_file(@uri_file)
 
-    assert File.exist?(@uri_file)
+    assert_path_exists @uri_file
     uri = File.read(@uri_file).strip
+
     assert uri.start_with?("drbunix:")
   ensure
     server&.stop
@@ -50,7 +52,8 @@ class TestServer < Minitest::Test
     wait_for_uri_file(@uri_file)
 
     server.stop
-    refute File.exist?(@uri_file)
+
+    refute_path_exists @uri_file
   ensure
     thread&.kill
   end
@@ -63,6 +66,7 @@ class TestServer < Minitest::Test
     uri = File.read(@uri_file).strip
     begin; DRb.current_server; rescue DRb::DRbServerNotFound; DRb.start_service; end
     remote = DRbObject.new_with_uri(uri)
+
     assert_equal :pong, remote.ping
   ensure
     server&.stop

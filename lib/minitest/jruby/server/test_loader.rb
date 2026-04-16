@@ -23,8 +23,8 @@ module Minitest
           files = test_files
           if files.empty?
             raise NoTestsFound,
-              "No test files found matching: #{@config.test_paths.join(", ")} " \
-              "in #{@config.project_root}"
+                  "No test files found matching: #{@config.test_paths.join(", ")} " \
+                  "in #{@config.project_root}"
           end
 
           files.each { |f| require f }

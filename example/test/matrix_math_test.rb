@@ -9,40 +9,46 @@ class MatrixMathTest < Minitest::Test
   def test_multiply_2x2
     a = [[1, 2], [3, 4]]
     b = [[5, 6], [7, 8]]
+
     assert_equal [[19, 22], [43, 50]], @mm.multiply(a, b)
   end
 
   def test_multiply_identity
     m = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
     id = @mm.identity(3)
+
     assert_equal m, @mm.multiply(m, id)
   end
 
   def test_multiply_20x20
-    # This exercises tight numeric loops — JIT target
+    # This exercises tight numeric loops JIT target
     n = 20
     a = Array.new(n) { |i| Array.new(n) { |j| i + j + 1 } }
     b = Array.new(n) { |i| Array.new(n) { |j| (i + 1) * (j + 1) } }
     result = @mm.multiply(a, b)
+
     assert_equal n, result.length
     assert_equal n, result[0].length
     # Spot-check: result[0][0] should be sum of a[0][k]*b[k][0] for k=0..19
     expected = (0...n).sum { |k| (k + 1) * (k + 1) }
+
     assert_equal expected, result[0][0]
   end
 
   def test_transpose
     m = [[1, 2, 3], [4, 5, 6]]
+
     assert_equal [[1, 4], [2, 5], [3, 6]], @mm.transpose(m)
   end
 
   def test_determinant_2x2
-    assert_equal -2, @mm.determinant([[1, 2], [3, 4]])
+    assert_equal(-2, @mm.determinant([[1, 2], [3, 4]]))
   end
 
   def test_determinant_3x3
     m = [[6, 1, 1], [4, -2, 5], [2, 8, 7]]
-    assert_equal -306, @mm.determinant(m)
+
+    assert_equal(-306, @mm.determinant(m))
   end
 
   def test_dot_product
@@ -51,6 +57,7 @@ class MatrixMathTest < Minitest::Test
 
   def test_identity
     id = @mm.identity(3)
+
     assert_equal [[1, 0, 0], [0, 1, 0], [0, 0, 1]], id
   end
 end

@@ -31,15 +31,15 @@ module Minitest
           summary = reporter.reporters.grep(Minitest::SummaryReporter).first
 
           {
-            seed:       seed,
-            tests:      summary.count,
+            seed: seed,
+            tests: summary.count,
             assertions: summary.assertions,
-            failures:   summary.failures,
-            errors:     summary.errors,
-            skips:      summary.skips,
-            passed:     summary.passed?,
-            time:       elapsed,
-            output:     options[:io].string,
+            failures: summary.failures,
+            errors: summary.errors,
+            skips: summary.skips,
+            passed: summary.passed?,
+            time: elapsed,
+            output: options[:io].string,
           }
         end
 
@@ -49,7 +49,7 @@ module Minitest
           return unless pattern
           return unless pattern.is_a?(String) && pattern =~ %r{^/(.*)/[mixo]*$}
 
-          Regexp.new($1)
+          Regexp.new(::Regexp.last_match(1))
         rescue RegexpError => e
           raise InvalidFilter, "Invalid filter pattern: #{pattern} (#{e.message})"
         end

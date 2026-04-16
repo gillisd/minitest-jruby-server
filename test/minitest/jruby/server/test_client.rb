@@ -18,9 +18,11 @@ class TestClient < Minitest::Test
     with_server do |config|
       client = Minitest::Jruby::Server::Client.new(config: config)
       client.connect
-      assert client.connected?
+
+      assert_predicate client, :connected?
 
       info = client.info
+
       assert_kind_of Hash, info
       assert info.key?(:pid)
     end
@@ -31,6 +33,7 @@ class TestClient < Minitest::Test
       client = Minitest::Jruby::Server::Client.new(config: config)
       client.connect
       result = client.run_tests(seed: 42)
+
       assert_kind_of Hash, result
       assert result.key?(:tests)
       assert result.key?(:passed)
@@ -46,7 +49,12 @@ class TestClient < Minitest::Test
     daemon = Minitest::Jruby::Server::Daemon.new
     server = Minitest::Jruby::Server::Server.new(daemon: daemon, config: config)
     thread = Thread.new { server.start }
-    50.times { break if File.exist?(uri_file) && File.size?(uri_file); Thread.pass; Kernel.sleep(0.01) }
+    50.times {
+      break if File.exist?(uri_file) && File.size?(uri_file)
+
+      Thread.pass
+      Kernel.sleep(0.01)
+    }
 
     yield config
   ensure

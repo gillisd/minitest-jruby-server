@@ -29,7 +29,7 @@ module Example
     def determinant(matrix)
       n = matrix.length
       return matrix[0][0] if n == 1
-      return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0] if n == 2
+      return (matrix[0][0] * matrix[1][1]) - (matrix[0][1] * matrix[1][0]) if n == 2
 
       det = 0
       n.times do |j|
@@ -55,6 +55,7 @@ module Example
     def submatrix(matrix, row, col)
       matrix.each_with_index.filter_map { |r, i|
         next if i == row
+
         r.each_with_index.filter_map { |v, j| v unless j == col }
       }
     end
