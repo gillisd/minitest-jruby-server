@@ -1,3 +1,7 @@
-$LOAD_PATH.unshift File.join(__dir__, "..", "lib")
+ENV["MT_NO_PLUGINS"] = "1" unless ENV["RM_INFO"]
+
 require "minitest/autorun"
-require "minitest/jruby_server"
+require "minitest/reporters"
+Minitest::Reporters.use! [Minitest::Reporters::DefaultReporter.new(color: true)]
+
+require "minitest/jruby/server"

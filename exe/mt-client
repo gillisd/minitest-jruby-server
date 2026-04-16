@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+require "bundler/setup"
 require "optparse"
 
 options = { runs: 1 }
@@ -46,28 +47,26 @@ OptionParser.new do |opts|
   end
 
   opts.on("-V", "--version", "Show version") do
-    $LOAD_PATH.unshift File.join(__dir__, "..", "lib")
-    require "minitest/jruby_server/version"
-    puts "mt-client #{Minitest::JRubyServer::VERSION}"
+    require "minitest/jruby/server"
+    puts "mt-client #{Minitest::Jruby::Server::VERSION}"
     exit
   end
 end.parse!
 
-$LOAD_PATH.unshift File.join(__dir__, "..", "lib")
-require "minitest/jruby_server"
+require "minitest/jruby/server"
 
-config = Minitest::JRubyServer::Config.new(
+config = Minitest::Jruby::Server::Config.new(
   **options.slice(:uri_file, :project_root).compact
 )
-client = Minitest::JRubyServer::Client.new(config: config)
-fmt = Minitest::JRubyServer::ResultFormatter.new
+client = Minitest::Jruby::Server::Client.new(config: config)
+fmt = Minitest::Jruby::Server::ResultFormatter.new
 
 begin
   client.connect
-rescue Minitest::JRubyServer::ServerNotRunning => e
+rescue Minitest::Jruby::Server::ServerNotRunning => e
   $stderr.puts e.message
   exit 1
-rescue Minitest::JRubyServer::ConnectionError => e
+rescue Minitest::Jruby::Server::ConnectionError => e
   $stderr.puts e.message
   exit 1
 end

@@ -13,7 +13,7 @@ end
 
 class TestRunner < Minitest::Test
   def setup
-    @runner = Minitest::JRubyServer::Runner.new
+    @runner = Minitest::Jruby::Server::Runner.new
   end
 
   def test_run_returns_hash_with_required_keys
@@ -59,7 +59,7 @@ class TestRunner < Minitest::Test
   end
 
   def test_run_with_invalid_filter_raises
-    assert_raises Minitest::JRubyServer::InvalidFilter do
+    assert_raises Minitest::Jruby::Server::InvalidFilter do
       @runner.run(seed: 42, include_filter: "/[invalid/")
     end
   end

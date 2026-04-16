@@ -1,4 +1,13 @@
 source "https://rubygems.org"
+
 gemspec
-gem "minitest", path: "../minitest"
+
+gem "gempilot", require: false
+gem "minitest"
+gem "minitest-reporters"
 gem "rake"
+gem "rubocop"
+gem "rubocop-claude"
+gem "rubocop-minitest"
+gem "rubocop-performance"
+gem "rubocop-rake"

@@ -9,11 +9,11 @@ class TestServer < Minitest::Test
   def setup
     @tmpdir = Dir.mktmpdir("minitest-server-test")
     @uri_file = File.join(@tmpdir, "test.uri")
-    @config = Minitest::JRubyServer::Config.new(
+    @config = Minitest::Jruby::Server::Config.new(
       uri_file: @uri_file,
       socket_dir: @tmpdir
     )
-    @daemon = Minitest::JRubyServer::Daemon.new
+    @daemon = Minitest::Jruby::Server::Daemon.new
   end
 
   def teardown
@@ -32,7 +32,7 @@ class TestServer < Minitest::Test
   end
 
   def test_start_writes_uri_file
-    server = Minitest::JRubyServer::Server.new(daemon: @daemon, config: @config)
+    server = Minitest::Jruby::Server::Server.new(daemon: @daemon, config: @config)
     thread = Thread.new { server.start }
     wait_for_uri_file(@uri_file)
 
@@ -45,7 +45,7 @@ class TestServer < Minitest::Test
   end
 
   def test_stop_removes_uri_file
-    server = Minitest::JRubyServer::Server.new(daemon: @daemon, config: @config)
+    server = Minitest::Jruby::Server::Server.new(daemon: @daemon, config: @config)
     thread = Thread.new { server.start }
     wait_for_uri_file(@uri_file)
 
@@ -56,7 +56,7 @@ class TestServer < Minitest::Test
   end
 
   def test_daemon_accessible_via_drb
-    server = Minitest::JRubyServer::Server.new(daemon: @daemon, config: @config)
+    server = Minitest::Jruby::Server::Server.new(daemon: @daemon, config: @config)
     thread = Thread.new { server.start }
     wait_for_uri_file(@uri_file)
 

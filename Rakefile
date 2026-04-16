@@ -1,8 +1,24 @@
+require "bundler/gem_tasks"
+
 require "minitest/test_task"
 
-Minitest::TestTask.create :test do |t|
-  t.test_globs = ["test/**/*test*.rb"]
-  t.warning = true
+Minitest::TestTask.create
+
+require "rubocop/rake_task"
+RuboCop::RakeTask.new
+
+require "gempilot/version_task"
+Gempilot::VersionTask.new
+
+namespace :zeitwerk do
+  desc "Verify all files follow Zeitwerk naming conventions"
+  task :validate do
+    ruby "-e", <<~RUBY
+      require 'minitest/jruby/server'
+      Minitest::Jruby::Server::LOADER.eager_load(force: true)
+      puts 'Zeitwerk: All files loaded successfully.'
+    RUBY
+  end
 end
 
-task default: :test
+task default: [:test, :rubocop]

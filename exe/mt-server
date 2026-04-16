@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+require "bundler/setup"
 require "optparse"
 
 options = {}
@@ -30,25 +31,23 @@ OptionParser.new do |opts|
   end
 
   opts.on("-V", "--version", "Show version") do
-    $LOAD_PATH.unshift File.join(__dir__, "..", "lib")
-    require "minitest/jruby_server/version"
-    puts "mt-server #{Minitest::JRubyServer::VERSION}"
+    require "minitest/jruby/server"
+    puts "mt-server #{Minitest::Jruby::Server::VERSION}"
     exit
   end
 end.parse!
 
-$LOAD_PATH.unshift File.join(__dir__, "..", "lib")
 require "minitest"
 require "minitest/test"
-require "minitest/jruby_server"
+require "minitest/jruby/server"
 
-config = Minitest::JRubyServer::Config.new(**options.compact)
+config = Minitest::Jruby::Server::Config.new(**options.compact)
 
 # Boot
 $stderr.puts "[mt-server] Booting on #{RUBY_ENGINE} #{RUBY_ENGINE_VERSION}..."
 boot_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
-loader = Minitest::JRubyServer::TestLoader.new(config: config)
+loader = Minitest::Jruby::Server::TestLoader.new(config: config)
 loader.setup_load_path!
 loader.load_tests!
 
@@ -63,8 +62,8 @@ $stderr.puts "[mt-server] Boot complete in %.4fs" % boot_time
 $stderr.puts "[mt-server] #{suites.size} suites, #{suites.flat_map { |s| s.methods_matching(/^test_/) }.size} methods"
 
 # Serve
-daemon = Minitest::JRubyServer::Daemon.new
-server = Minitest::JRubyServer::Server.new(daemon: daemon, config: config)
+daemon = Minitest::Jruby::Server::Daemon.new
+server = Minitest::Jruby::Server::Server.new(daemon: daemon, config: config)
 
 $stderr.puts "[mt-server] Listening at #{server.uri}"
 $stderr.puts "[mt-server] URI file: #{config.uri_file}"
