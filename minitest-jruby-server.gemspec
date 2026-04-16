@@ -6,6 +6,7 @@ Gem::Specification.new do |spec|
   spec.authors = ["David Gillis"]
   spec.email = ["david@flipmine.com"]
   spec.summary = "Persistent JRuby test daemon for Minitest v6"
+  spec.homepage = "https://github.com/gillisd/minitest-jruby-server"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.1"
 
@@ -26,4 +27,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "minitest", "~> 6.0"
   spec.add_dependency "zeitwerk"
   spec.metadata["rubygems_mfa_required"] = "true"
+  spec.metadata["homepage_uri"] = spec.homepage
+  spec.metadata["source_code_uri"] = spec.homepage
+  spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/master/CHANGELOG.md"
 end

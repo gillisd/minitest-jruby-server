@@ -9,14 +9,16 @@ module Minitest
         end
 
         def test_files
+          root = File.expand_path(@config.project_root)
           @config.test_paths.flat_map { |pattern|
-            Dir.glob(File.join(@config.project_root, pattern))
+            Dir.glob(File.join(root, pattern))
           }.uniq.sort
         end
 
         def setup_load_path!
+          root = File.expand_path(@config.project_root)
           @config.load_paths.each do |path|
-            full = File.join(@config.project_root, path)
+            full = File.join(root, path)
             $LOAD_PATH.unshift(full) unless $LOAD_PATH.include?(full)
           end
         end

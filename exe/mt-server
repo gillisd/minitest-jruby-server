@@ -1,5 +1,9 @@
 #!/usr/bin/env ruby
-require "bundler/setup"
+begin
+  require "bundler/setup"
+rescue LoadError, Bundler::GemNotFound
+  # Running outside bundler (e.g., gem install or JRuby without dev deps)
+end
 require "optparse"
 
 def add_project_options(opts, options)

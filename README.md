@@ -52,14 +52,14 @@ Key design decisions:
 
 ```sh
 # Terminal 1: Start the JRuby server
-jruby -I lib bin/mt-server \
+jruby -Ilib exe/mt-server \
   --project-root example \
   --load-path app \
   --load-path test \
   --test-path "test/*_test.rb"
 
 # Terminal 2: Run tests from CRuby
-ruby -I lib bin/mt-client --runs 10
+ruby -Ilib exe/mt-client --runs 10
 ```
 
 The server keeps running. Every `mt-client` invocation triggers a fresh
@@ -106,7 +106,7 @@ test suites (`CalculatorTest`, `FibonacciTest`, `MatrixMathTest`,
 
 ```sh
 # Terminal 1
-jruby -I lib bin/mt-server \
+jruby -Ilib exe/mt-server \
   --project-root example \
   --load-path app \
   --load-path test \
@@ -116,9 +116,9 @@ jruby -I lib bin/mt-server \
 Expected server output:
 
 ```
-[mt-server] Booting on jruby 10.0.0.0...
-[mt-server] Boot complete in 2.3847s
-[mt-server] 4 suites, 18 methods
+[mt-server] Booting on jruby 10.0.4.0...
+[mt-server] Boot complete in 0.0288s
+[mt-server] 4 suites, 22 methods
 [mt-server] Listening at drbunix:/tmp/minitest_jruby.12345
 [mt-server] URI file: example/.minitest-jruby.uri
 [mt-server] Ctrl-C to stop
@@ -126,31 +126,29 @@ Expected server output:
 
 ```sh
 # Terminal 2
-ruby -I lib bin/mt-client --runs 10 --project-root example
+ruby -Ilib exe/mt-client --runs 10 --project-root example
 ```
 
 Expected client output:
 
 ```
 Connected to test daemon
-  Engine:  jruby 10.0.0.0
+  Engine:  jruby 10.0.4.0
   PID:     12345
   Uptime:  3.2s
   Runs:    0
 
-Run #1  PASS  18 tests, 26 assertions, 0 failures, 0 errors in 1.8423s
-Run #2  PASS  18 tests, 26 assertions, 0 failures, 0 errors in 0.4217s
-Run #3  PASS  18 tests, 26 assertions, 0 failures, 0 errors in 0.0891s
-Run #4  PASS  18 tests, 26 assertions, 0 failures, 0 errors in 0.0143s
-Run #5  PASS  18 tests, 26 assertions, 0 failures, 0 errors in 0.0082s
+Run #1   PASS  22 tests, 27 assertions, 0 failures, 0 errors in 0.0314s
+Run #2   PASS  22 tests, 27 assertions, 0 failures, 0 errors in 0.0562s
+Run #3   PASS  22 tests, 27 assertions, 0 failures, 0 errors in 0.1425s
 ...
-Run #10 PASS  18 tests, 26 assertions, 0 failures, 0 errors in 0.0051s
+Run #10  PASS  22 tests, 27 assertions, 0 failures, 0 errors in 0.0173s
 
-  Fastest: 0.0047s
-  Slowest: 1.8423s
-  Median:  0.0082s
-  Mean:    0.2391s
-  Trend:   last 3 runs 98.4% faster than first 3
+  Fastest: 0.0173s
+  Slowest: 0.1425s
+  Median:  0.0360s
+  Mean:    0.0444s
+  Trend:   last 3 runs 62.5% faster than first 3
 ```
 
 ---
@@ -182,15 +180,15 @@ consistent across suite sizes.
 You can drive the server programmatically without the CLIs:
 
 ```ruby
-require "minitest/jruby_server"
+require "minitest/jruby/server"
 
 # Config defaults to reading .minitest-jruby.uri in the current directory
-config = Minitest::JRubyServer::Config.new(
+config = Minitest::JRuby::Server::Config.new(
   project_root: "/path/to/project",
   uri_file:     "/path/to/project/.minitest-jruby.uri",
 )
 
-client = Minitest::JRubyServer::Client.new(config: config)
+client = Minitest::JRuby::Server::Client.new(config: config)
 client.connect   # raises ServerNotRunning if the daemon is not up
 
 # Run all tests with a fixed seed
