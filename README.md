@@ -10,6 +10,40 @@ milliseconds after a handful of warm-up iterations.
 
 ---
 
+## Installation
+
+Add to your Gemfile:
+
+```ruby
+gem "minitest-jruby-server"
+```
+
+Then `bundle install`. This installs two executables: `mt-server` and `mt-client`.
+
+---
+
+## Quick Start
+
+```sh
+# Terminal 1: Start the server under JRuby
+jruby -S bundle exec mt-server
+
+# Terminal 2: Run tests from CRuby
+bundle exec mt-client
+```
+
+That's it. The server loads tests from `test/**/*_test.rb`, boots once, and
+waits. The client connects, triggers a run, and prints results. Run it again —
+the JVM is already warm.
+
+For repeated runs to observe JIT warmup:
+
+```sh
+bundle exec mt-client --runs 10
+```
+
+---
+
 ## How It Works
 
 ```
@@ -28,43 +62,19 @@ milliseconds after a handful of warm-up iterations.
   (prints to stdout)
 ```
 
-Key design decisions:
-
-- **Load once.** At startup `TestLoader` requires every test file. Each
+- **Load once.** `TestLoader` requires every test file at startup. Each
   `Minitest::Test` subclass registers itself in `Minitest::Runnable.runnables`
   and stays there for the lifetime of the process.
 
 - **Fresh instances per run.** `Minitest.run_all_suites` creates a new instance
-  for each test method via `klass.new(method_name).run`, so there is no shared
-  state between runs.
+  for each test method via `klass.new(method_name).run` — no shared state
+  between runs.
 
-- **Marshal-safe results.** `Runner#run` returns a plain Ruby Hash (`seed`,
-  `tests`, `failures`, `errors`, `time`, `output`, …). Plain hashes cross the
-  DRb wire without requiring the client to have your application code loaded.
+- **Marshal-safe results.** `Runner#run` returns a plain Ruby Hash. No Minitest
+  objects cross the wire, so the client doesn't need your app code loaded.
 
 - **No forking.** Server and client are separate OS processes communicating
-  solely through DRb over a Unix domain socket. The server writes its socket URI
-  to `.minitest-jruby.uri`; the client reads it to connect.
-
----
-
-## Quick Start
-
-```sh
-# Terminal 1: Start the JRuby server
-jruby -Ilib exe/mt-server \
-  --project-root example \
-  --load-path app \
-  --load-path test \
-  --test-path "test/*_test.rb"
-
-# Terminal 2: Run tests from CRuby
-ruby -Ilib exe/mt-client --runs 10
-```
-
-The server keeps running. Every `mt-client` invocation triggers a fresh
-Minitest run in the live JRuby process; you never pay the JVM startup cost
-again.
+  through DRb over a Unix domain socket.
 
 ---
 
@@ -72,16 +82,20 @@ again.
 
 ### mt-server
 
+Start under JRuby: `jruby -S bundle exec mt-server [options]`
+
 | Flag | Argument | Default | Description |
 |------|----------|---------|-------------|
 | `--project-root` | `DIR` | `Dir.pwd` | Root of the project under test |
 | `--load-path` | `PATH` | `lib`, `test` | Add to `$LOAD_PATH` (repeatable) |
 | `--test-path` | `GLOB` | `test/**/*_test.rb` | Test file glob (repeatable) |
-| `--uri-file` | `PATH` | `<project-root>/.minitest-jruby.uri` | Where to write the DRb URI |
+| `--uri-file` | `PATH` | `<root>/.minitest-jruby.uri` | Where to write the DRb URI |
 | `-V`, `--version` | | | Print version and exit |
 | `-h`, `--help` | | | Show help |
 
 ### mt-client
+
+Run under any Ruby: `bundle exec mt-client [options]`
 
 | Flag | Argument | Default | Description |
 |------|----------|---------|-------------|
@@ -102,22 +116,20 @@ again.
 
 The repository includes a small example application under `example/` with four
 test suites (`CalculatorTest`, `FibonacciTest`, `MatrixMathTest`,
-`StringUtilsTest`).
+`StringUtilsTest`) — 22 test methods total.
 
 ```sh
 # Terminal 1
-jruby -Ilib exe/mt-server \
+jruby -S bundle exec mt-server \
   --project-root example \
   --load-path app \
   --load-path test \
   --test-path "test/*_test.rb"
 ```
 
-Expected server output:
-
 ```
 [mt-server] Booting on jruby 10.0.4.0...
-[mt-server] Boot complete in 0.0288s
+[mt-server] Boot complete in 0.0110s
 [mt-server] 4 suites, 22 methods
 [mt-server] Listening at drbunix:/tmp/minitest_jruby.12345
 [mt-server] URI file: example/.minitest-jruby.uri
@@ -126,29 +138,32 @@ Expected server output:
 
 ```sh
 # Terminal 2
-ruby -Ilib exe/mt-client --runs 10 --project-root example
+bundle exec mt-client --uri-file example/.minitest-jruby.uri --runs 5
 ```
-
-Expected client output:
 
 ```
 Connected to test daemon
   Engine:  jruby 10.0.4.0
   PID:     12345
-  Uptime:  3.2s
+  Uptime:  0.7s
   Runs:    0
 
-Run #1   PASS  22 tests, 27 assertions, 0 failures, 0 errors in 0.0314s
-Run #2   PASS  22 tests, 27 assertions, 0 failures, 0 errors in 0.0562s
-Run #3   PASS  22 tests, 27 assertions, 0 failures, 0 errors in 0.1425s
-...
-Run #10  PASS  22 tests, 27 assertions, 0 failures, 0 errors in 0.0173s
+Run #1   PASS  22 tests, 27 assertions, 0 failures, 0 errors in 0.0236s
+Run #2   PASS  22 tests, 27 assertions, 0 failures, 0 errors in 0.0162s
+Run #3   PASS  22 tests, 27 assertions, 0 failures, 0 errors in 0.0391s
+Run #4   PASS  22 tests, 27 assertions, 0 failures, 0 errors in 0.0138s
+Run #5   PASS  22 tests, 27 assertions, 0 failures, 0 errors in 0.0097s
 
-  Fastest: 0.0173s
-  Slowest: 0.1425s
-  Median:  0.0360s
-  Mean:    0.0444s
-  Trend:   last 3 runs 62.5% faster than first 3
+  Fastest: 0.0097s
+  Slowest: 0.0391s
+  Median:  0.0162s
+  Mean:    0.0205s
+```
+
+Filter to a single suite:
+
+```sh
+bundle exec mt-client --uri-file example/.minitest-jruby.uri --include "/MatrixMath/"
 ```
 
 ---
@@ -159,19 +174,14 @@ The JVM starts cold. Expect this rough progression:
 
 | Run | Typical time | What is happening |
 |-----|-------------|-------------------|
-| 1 | 1–3 s | Interpreter mode; class loading, bytecode verification |
-| 2–3 | 100–500 ms | Tiered compilation begins on hot methods |
-| 4–6 | 5–50 ms | C1 compiled; inner loops promoted to C2 |
-| 7+ | 2–10 ms | Fully JIT-compiled; overhead is now pure Ruby logic |
+| 1 | 20–40 ms | Interpreter mode; first pass through test code |
+| 2–3 | 15–40 ms | Tiered compilation begins on hot methods |
+| 4–5 | 10–15 ms | C1 compiled; inner loops promoted to C2 |
+| 6+ | 3–10 ms | Fully JIT-compiled; overhead is pure Ruby logic |
 
-The `--runs N` flag exists precisely to let you observe this curve. For a
-typical TDD workflow — running the suite many times per minute — runs 2 and
-beyond are what matter. Once the JIT is warm the server can sustain sub-10 ms
-turnaround indefinitely.
-
-If your suite is substantially larger, the plateau will still be reached; it
-just takes a few more runs. The shape of the curve (steep drop then flat) is
-consistent across suite sizes.
+The `--runs N` flag exists precisely to observe this curve. For a typical TDD
+workflow — running the suite many times per minute — runs 2+ are what matter.
+Once the JIT is warm the server sustains sub-10ms turnaround indefinitely.
 
 ---
 
@@ -182,36 +192,27 @@ You can drive the server programmatically without the CLIs:
 ```ruby
 require "minitest/jruby/server"
 
-# Config defaults to reading .minitest-jruby.uri in the current directory
-config = Minitest::JRuby::Server::Config.new(
-  project_root: "/path/to/project",
-  uri_file:     "/path/to/project/.minitest-jruby.uri",
-)
-
+config = Minitest::JRuby::Server::Config.new
 client = Minitest::JRuby::Server::Client.new(config: config)
 client.connect   # raises ServerNotRunning if the daemon is not up
 
-# Run all tests with a fixed seed
+# Run all tests
 result = client.run_tests(seed: 42)
 
 # Run a subset
-result = client.run_tests(seed: 42, include_filter: "/Calculator/")
+result = client.run_tests(include_filter: "/Calculator/")
 
-puts result[:passed]     # => true
-puts result[:tests]      # => 5
-puts result[:time]       # => 0.0063
-puts result[:output]     # => full Minitest text output
+result[:passed]     # => true
+result[:tests]      # => 5
+result[:time]       # => 0.0063
+result[:output]     # => full Minitest text output
 
 # Query the daemon
-info = client.info       # => { engine:, pid:, runs_so_far:, uptime: }
+client.info         # => { engine:, pid:, runs_so_far:, uptime: }
 
 # Graceful shutdown
 client.shutdown_server
 ```
-
-`run_tests` always returns a plain Hash — no Minitest objects cross the wire.
-This means the client process does not need your application code on its load
-path.
 
 ---
 
@@ -219,19 +220,17 @@ path.
 
 `Minitest.run_all_suites` (added in Minitest 6) iterates
 `Minitest::Runnable.runnables`, applies seed-based shuffling and include/exclude
-filters, then calls `klass.runnable_methods.each { |m| klass.new(m).run(reporter) }`.
+filters, then runs each test method as `klass.new(method_name).run`.
 
-Every call to `run_tests` on the daemon goes through this path from scratch:
-new instances, new shuffled order, independently reported. The daemon holds no
-per-run state — only the loaded class objects and a monotonic run counter used
-for display. This stateless design means:
+Every `run_tests` call goes through this path from scratch: new instances, new
+shuffled order, independently reported. The daemon holds no per-run state — only
+the loaded class objects and a monotonic run counter. This means:
 
 - Runs are reproducible with the same seed.
 - One flaky test does not poison subsequent runs.
-- Filters work identically to native `ruby -Ilib -e "require 'minitest/autorun'"` runs.
+- Filters work identically to `ruby -e "require 'minitest/autorun'"` runs.
 
-The daemon wraps each run in a `Mutex` so concurrent clients (uncommon but
-possible) do not interleave output.
+The daemon wraps each run in a `Mutex` so concurrent clients do not interleave.
 
 ---
 
@@ -239,10 +238,10 @@ possible) do not interleave output.
 
 - Ruby 3.1+ (client side)
 - JRuby 10+ (server side)
-- Minitest 6.0+ (both sides; `Minitest.run_all_suites` is a 6.0 addition)
+- Minitest 6.0+ (both sides)
 
-The client can be any Ruby implementation — CRuby, TruffleRuby, etc. Only the
-server must run on JRuby for the warmup benefit to apply.
+The client can be any Ruby implementation. Only the server must run on JRuby
+for the warmup benefit.
 
 ---
 
