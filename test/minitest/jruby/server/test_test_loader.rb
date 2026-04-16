@@ -28,8 +28,8 @@ class TestTestLoader < Minitest::Test
   end
 
   def test_discovers_test_files
-    config = Minitest::Jruby::Server::Config.new(project_root: @dir)
-    loader = Minitest::Jruby::Server::TestLoader.new(config: config)
+    config = Minitest::JRuby::Server::Config.new(project_root: @dir)
+    loader = Minitest::JRuby::Server::TestLoader.new(config: config)
 
     assert_includes loader.test_files.map { |f| File.basename(f) }, "widget_test.rb"
   end
@@ -37,10 +37,10 @@ class TestTestLoader < Minitest::Test
   def test_raises_when_no_tests_found
     empty_dir = Dir.mktmpdir("minitest-empty")
     FileUtils.mkdir_p(File.join(empty_dir, "test"))
-    config = Minitest::Jruby::Server::Config.new(project_root: empty_dir)
-    loader = Minitest::Jruby::Server::TestLoader.new(config: config)
+    config = Minitest::JRuby::Server::Config.new(project_root: empty_dir)
+    loader = Minitest::JRuby::Server::TestLoader.new(config: config)
 
-    assert_raises Minitest::Jruby::Server::NoTestsFound do
+    assert_raises Minitest::JRuby::Server::NoTestsFound do
       loader.load_tests!
     end
   ensure

@@ -15,7 +15,7 @@ namespace :zeitwerk do
   task :validate do
     ruby "-e", <<~RUBY
       require 'minitest/jruby/server'
-      Minitest::Jruby::Server::LOADER.eager_load(force: true)
+      Minitest::JRuby::Server::LOADER.eager_load(force: true)
       puts 'Zeitwerk: All files loaded successfully.'
     RUBY
   end

@@ -2,7 +2,7 @@ require "English"
 require "tmpdir"
 
 module Minitest
-  module Jruby
+  module JRuby
     module Server
       class Config
         attr_reader :project_root, :uri_file, :socket_dir,

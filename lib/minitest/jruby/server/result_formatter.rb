@@ -1,5 +1,5 @@
 module Minitest
-  module Jruby
+  module JRuby
     module Server
       class ResultFormatter
         def initialize(io: $stdout)

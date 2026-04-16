@@ -1,6 +1,6 @@
 require "English"
 module Minitest
-  module Jruby
+  module JRuby
     module Server
       class Daemon
         def initialize(runner: Runner.new)

@@ -2,7 +2,7 @@ require_relative "lib/minitest/jruby/server/version"
 
 Gem::Specification.new do |spec|
   spec.name = "minitest-jruby-server"
-  spec.version = Minitest::Jruby::Server::VERSION
+  spec.version = Minitest::JRuby::Server::VERSION
   spec.authors = ["David Gillis"]
   spec.email = ["david@flipmine.com"]
   spec.summary = "Persistent JRuby test daemon for Minitest v6"

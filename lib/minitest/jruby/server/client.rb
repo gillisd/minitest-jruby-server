@@ -1,7 +1,7 @@
 require "drb"
 
 module Minitest
-  module Jruby
+  module JRuby
     module Server
       class Client
         def initialize(config: Config.new)

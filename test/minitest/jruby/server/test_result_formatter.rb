@@ -4,7 +4,7 @@ require "stringio"
 class TestResultFormatter < Minitest::Test
   def setup
     @io  = StringIO.new
-    @fmt = Minitest::Jruby::Server::ResultFormatter.new(io: @io)
+    @fmt = Minitest::JRuby::Server::ResultFormatter.new(io: @io)
   end
 
   def test_print_run_result_shows_status

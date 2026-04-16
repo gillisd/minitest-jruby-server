@@ -15,7 +15,7 @@ class TestDaemon < Minitest::Test
 
   def setup
     @fake_runner = FakeRunner.new
-    @daemon = Minitest::Jruby::Server::Daemon.new(runner: @fake_runner)
+    @daemon = Minitest::JRuby::Server::Daemon.new(runner: @fake_runner)
   end
 
   def test_run_tests_delegates_to_runner

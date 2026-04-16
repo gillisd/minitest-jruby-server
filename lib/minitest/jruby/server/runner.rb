@@ -2,7 +2,7 @@ require "minitest"
 require "stringio"
 
 module Minitest
-  module Jruby
+  module JRuby
     module Server
       class Runner
         def run(seed: nil, include_filter: nil, exclude_filter: nil)
