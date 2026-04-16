@@ -3,7 +3,7 @@ require "test_helper"
 # Define test classes that Runner will execute
 class RunnerDemoTest < Minitest::Test
   def test_passing
-    assert true
+    pass
   end
 
   def test_also_passing

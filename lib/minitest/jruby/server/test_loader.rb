@@ -1,6 +1,8 @@
 module Minitest
   module JRuby
     module Server
+      ## Discovers and loads test files based on configured globs,
+      ## setting up the $LOAD_PATH for the project under test.
       class TestLoader
         def initialize(config:)
           @config = config

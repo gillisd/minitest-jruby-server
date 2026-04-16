@@ -2,15 +2,17 @@
 require "bundler/setup"
 require "optparse"
 
-options = {}
-
-OptionParser.new do |opts|
-  opts.banner = "Usage: mt-server [options]"
-
+def add_project_options(opts, options)
   opts.on("--project-root DIR", "Root of the project to test (default: pwd)") do |v|
     options[:project_root] = v
   end
 
+  opts.on("--uri-file PATH", "URI file location") do |v|
+    options[:uri_file] = v
+  end
+end
+
+def add_path_options(opts, options)
   opts.on("--test-path GLOB", "Test file glob (repeatable)") do |v|
     (options[:test_paths] ||= []) << v
   end
@@ -18,11 +20,9 @@ OptionParser.new do |opts|
   opts.on("--load-path PATH", "Add to $LOAD_PATH (repeatable)") do |v|
     (options[:load_paths] ||= []) << v
   end
+end
 
-  opts.on("--uri-file PATH", "URI file location") do |v|
-    options[:uri_file] = v
-  end
-
+def add_info_options(opts)
   opts.on("-h", "--help", "Show this help") do
     puts opts
     exit
@@ -30,22 +30,35 @@ OptionParser.new do |opts|
 
   opts.on("-V", "--version", "Show version") do
     require "minitest/jruby/server"
-    puts "mt-server #{Minitest::Jruby::Server::VERSION}"
+    puts "mt-server #{Minitest::JRuby::Server::VERSION}"
     exit
   end
-end.parse!
+end
+
+def parse_options
+  options = {}
+  OptionParser.new do |opts|
+    opts.banner = "Usage: mt-server [options]"
+    add_project_options(opts, options)
+    add_path_options(opts, options)
+    add_info_options(opts)
+  end.parse!
+  options
+end
+
+options = parse_options
 
 require "minitest"
 require "minitest/test"
 require "minitest/jruby/server"
 
-config = Minitest::Jruby::Server::Config.new(**options.compact)
+config = Minitest::JRuby::Server::Config.new(**options.compact)
 
 # Boot
 warn "[mt-server] Booting on #{RUBY_ENGINE} #{RUBY_ENGINE_VERSION}..."
 boot_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
-loader = Minitest::Jruby::Server::TestLoader.new(config: config)
+loader = Minitest::JRuby::Server::TestLoader.new(config: config)
 loader.setup_load_path!
 loader.load_tests!
 
@@ -56,12 +69,12 @@ srand 0
 boot_time = Process.clock_gettime(Process::CLOCK_MONOTONIC) - boot_start
 suites = loader.loaded_suites
 
-warn "[mt-server] Boot complete in %.4fs" % boot_time
+warn format("[mt-server] Boot complete in %.4fs", boot_time)
 warn "[mt-server] #{suites.size} suites, #{suites.flat_map { |s| s.methods_matching(/^test_/) }.size} methods"
 
 # Serve
-daemon = Minitest::Jruby::Server::Daemon.new
-server = Minitest::Jruby::Server::Server.new(daemon: daemon, config: config)
+daemon = Minitest::JRuby::Server::Daemon.new
+server = Minitest::JRuby::Server::Server.new(daemon: daemon, config: config)
 
 warn "[mt-server] Listening at #{server.uri}"
 warn "[mt-server] URI file: #{config.uri_file}"

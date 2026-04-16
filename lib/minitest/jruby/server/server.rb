@@ -3,6 +3,8 @@ require "drb"
 module Minitest
   module JRuby
     module Server
+      ## DRb server that exposes a Daemon instance over a Unix socket,
+      ## handling lifecycle, signal traps, and stale-PID detection.
       class Server
         def initialize(daemon:, config: Config.new)
           @daemon = daemon
@@ -39,19 +41,27 @@ module Minitest
           return unless File.exist?(@config.uri_file)
 
           old_uri = File.read(@config.uri_file).strip
-          return unless old_uri =~ /\.(\d+)$/
+          pid = extract_pid_from_uri(old_uri)
+          return unless pid
 
-          pid = ::Regexp.last_match(1).to_i
-          begin
-            Process.kill(0, pid)
-            raise ServerAlreadyRunning,
-                  "Server already running (PID #{pid}). URI file: #{@config.uri_file}"
-          rescue Errno::ESRCH
-            File.delete(@config.uri_file) # stale file, remove it
-          rescue Errno::EPERM
-            raise ServerAlreadyRunning,
-                  "Server already running (PID #{pid}, not owned by this user)"
-          end
+          verify_pid_not_running!(pid)
+        end
+
+        def verify_pid_not_running!(pid)
+          Process.kill(0, pid)
+          raise ServerAlreadyRunning,
+                "Server already running (PID #{pid}). URI file: #{@config.uri_file}"
+        rescue Errno::ESRCH
+          File.delete(@config.uri_file) # stale file, remove it
+        rescue Errno::EPERM
+          raise ServerAlreadyRunning,
+                "Server already running (PID #{pid}, not owned by this user)"
+        end
+
+        def extract_pid_from_uri(uri_string)
+          return unless uri_string =~ /\.(\d+)$/
+
+          ::Regexp.last_match(1).to_i
         end
 
         def cleanup

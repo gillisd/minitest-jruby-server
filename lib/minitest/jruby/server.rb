@@ -2,6 +2,8 @@ require "zeitwerk"
 
 module Minitest
   module JRuby
+    ## Top-level namespace for the minitest-jruby-server gem,
+    ## providing a persistent DRb-based test runner.
     module Server
       LOADER = Zeitwerk::Loader.new
       LOADER.tag = "minitest-jruby-server"

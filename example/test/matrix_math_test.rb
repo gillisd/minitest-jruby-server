@@ -1,6 +1,7 @@
 require "test_helper"
 require "matrix_math"
 
+## Tests for Example::MatrixMath operations.
 class MatrixMathTest < Minitest::Test
   def setup
     @mm = Example::MatrixMath.new
@@ -21,16 +22,11 @@ class MatrixMathTest < Minitest::Test
   end
 
   def test_multiply_20x20
-    # This exercises tight numeric loops JIT target
-    n = 20
-    a = Array.new(n) { |i| Array.new(n) { |j| i + j + 1 } }
-    b = Array.new(n) { |i| Array.new(n) { |j| (i + 1) * (j + 1) } }
-    result = @mm.multiply(a, b)
+    result = multiply_sequential_matrices(20)
 
-    assert_equal n, result.length
-    assert_equal n, result[0].length
-    # Spot-check: result[0][0] should be sum of a[0][k]*b[k][0] for k=0..19
-    expected = (0...n).sum { |k| (k + 1) * (k + 1) }
+    assert_equal 20, result.length
+    assert_equal 20, result[0].length
+    expected = (0...20).sum { |k| (k + 1) * (k + 1) }
 
     assert_equal expected, result[0][0]
   end
@@ -59,5 +55,19 @@ class MatrixMathTest < Minitest::Test
     id = @mm.identity(3)
 
     assert_equal [[1, 0, 0], [0, 1, 0], [0, 0, 1]], id
+  end
+
+  private
+
+  def build_sequential_matrix(size)
+    Array.new(size) { |i| Array.new(size) { |j| i + j + 1 } }
+  end
+
+  def build_product_matrix(size)
+    Array.new(size) { |i| Array.new(size) { |j| (i + 1) * (j + 1) } }
+  end
+
+  def multiply_sequential_matrices(size)
+    @mm.multiply(build_sequential_matrix(size), build_product_matrix(size))
   end
 end

@@ -6,7 +6,7 @@ class TestDaemon < Minitest::Test
       super(0)
     end
 
-    def run(seed: nil, include_filter: nil, exclude_filter: nil)
+    def run(seed: nil, **_filters)
       self.call_count += 1
       { seed: seed || 42, tests: 5, assertions: 10, failures: 0,
         errors: 0, skips: 0, passed: true, time: 0.001, output: "" }

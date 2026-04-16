@@ -1,19 +1,16 @@
 module Example
+  ## Matrix and vector arithmetic operations.
   class MatrixMath
-    def multiply(a, b)
-      rows_a = a.length
-      cols_b = b[0].length
-      cols_a = a[0].length
+    def multiply(left, right)
+      rows = left.length
+      cols = right[0].length
+      inner = left[0].length
 
-      result = Array.new(rows_a) { Array.new(cols_b, 0) }
+      result = Array.new(rows) { Array.new(cols, 0) }
 
-      rows_a.times do |i|
-        cols_b.times do |j|
-          sum = 0
-          cols_a.times do |k|
-            sum += a[i][k] * b[k][j]
-          end
-          result[i][j] = sum
+      rows.times do |i|
+        cols.times do |j|
+          result[i][j] = dot_row_col(left, right, i, j, inner)
         end
       end
 
@@ -27,17 +24,10 @@ module Example
     end
 
     def determinant(matrix)
-      n = matrix.length
-      return matrix[0][0] if n == 1
-      return (matrix[0][0] * matrix[1][1]) - (matrix[0][1] * matrix[1][0]) if n == 2
+      return matrix[0][0] if matrix.length == 1
+      return (matrix[0][0] * matrix[1][1]) - (matrix[0][1] * matrix[1][0]) if matrix.length == 2
 
-      det = 0
-      n.times do |j|
-        sub = submatrix(matrix, 0, j)
-        sign = j.even? ? 1 : -1
-        det += sign * matrix[0][j] * determinant(sub)
-      end
-      det
+      cofactor_expansion(matrix)
     end
 
     def dot_product(v1, v2)
@@ -46,11 +36,27 @@ module Example
       sum
     end
 
-    def identity(n)
-      Array.new(n) { |i| Array.new(n) { |j| i == j ? 1 : 0 } }
+    def identity(size)
+      Array.new(size) { |i| Array.new(size) { |j| i == j ? 1 : 0 } }
     end
 
     private
+
+    def dot_row_col(left, right, row, col, inner)
+      sum = 0
+      inner.times { |k| sum += left[row][k] * right[k][col] }
+      sum
+    end
+
+    def cofactor_expansion(matrix)
+      det = 0
+      matrix.length.times do |j|
+        sub = submatrix(matrix, 0, j)
+        sign = j.even? ? 1 : -1
+        det += sign * matrix[0][j] * determinant(sub)
+      end
+      det
+    end
 
     def submatrix(matrix, row, col)
       matrix.each_with_index.filter_map { |r, i|

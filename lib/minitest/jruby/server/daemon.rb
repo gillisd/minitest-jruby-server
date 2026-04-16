@@ -2,6 +2,8 @@ require "English"
 module Minitest
   module JRuby
     module Server
+      ## DRb-exposed daemon that serializes test runs through a mutex
+      ## and tracks run counts and uptime.
       class Daemon
         def initialize(runner: Runner.new)
           @runner     = runner

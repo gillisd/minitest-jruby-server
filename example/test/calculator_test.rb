@@ -1,6 +1,7 @@
 require "test_helper"
 require "calculator"
 
+## Tests for Example::Calculator arithmetic operations.
 class CalculatorTest < Minitest::Test
   def setup
     @calc = Example::Calculator.new

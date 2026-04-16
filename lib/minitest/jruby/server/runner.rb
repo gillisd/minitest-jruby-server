@@ -4,6 +4,8 @@ require "stringio"
 module Minitest
   module JRuby
     module Server
+      ## Executes Minitest suites in-process and returns a result hash
+      ## with counts, timing, and captured output.
       class Runner
         def run(seed: nil, include_filter: nil, exclude_filter: nil)
           seed ||= Random.new_seed % 0xFFFF
@@ -11,12 +13,23 @@ module Minitest
           validate_filter!(include_filter)
           validate_filter!(exclude_filter)
 
-          options = { io: StringIO.new, seed: seed }
-          options[:include] = include_filter if include_filter
-          options[:exclude] = exclude_filter if exclude_filter
+          options = build_options(seed, include_filter, exclude_filter)
+          reporter, elapsed = execute_suite(options)
+          collect_results(reporter, seed, elapsed, options[:io])
+        end
 
-          Minitest.seed = seed
-          srand seed
+        private
+
+        def build_options(seed, include_filter, exclude_filter)
+          opts = { io: StringIO.new, seed: seed }
+          opts[:include] = include_filter if include_filter
+          opts[:exclude] = exclude_filter if exclude_filter
+          opts
+        end
+
+        def execute_suite(options)
+          Minitest.seed = options[:seed]
+          srand options[:seed]
 
           reporter = Minitest::CompositeReporter.new
           reporter << Minitest::SummaryReporter.new(options[:io], options)
@@ -27,7 +40,10 @@ module Minitest
           elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - t0
 
           reporter.report
+          [reporter, elapsed]
+        end
 
+        def collect_results(reporter, seed, elapsed, io)
           summary = reporter.reporters.grep(Minitest::SummaryReporter).first
 
           {
@@ -39,11 +55,9 @@ module Minitest
             skips: summary.skips,
             passed: summary.passed?,
             time: elapsed,
-            output: options[:io].string,
+            output: io.string,
           }
         end
-
-        private
 
         def validate_filter!(pattern)
           return unless pattern

@@ -43,23 +43,32 @@ class TestClient < Minitest::Test
   private
 
   def with_server
+    server, thread, tmpdir = start_test_server
+
+    yield server.instance_variable_get(:@config)
+  ensure
+    server&.stop
+    thread&.kill
+    FileUtils.rm_rf(tmpdir)
+  end
+
+  def start_test_server
     tmpdir = Dir.mktmpdir("minitest-client-test")
     uri_file = File.join(tmpdir, "test.uri")
     config = Minitest::JRuby::Server::Config.new(uri_file: uri_file, socket_dir: tmpdir)
     daemon = Minitest::JRuby::Server::Daemon.new
     server = Minitest::JRuby::Server::Server.new(daemon: daemon, config: config)
     thread = Thread.new { server.start }
+    wait_for_file(uri_file)
+    [server, thread, tmpdir]
+  end
+
+  def wait_for_file(path)
     50.times {
-      break if File.exist?(uri_file) && File.size?(uri_file)
+      break if File.exist?(path) && File.size?(path)
 
       Thread.pass
       Kernel.sleep(0.01)
     }
-
-    yield config
-  ensure
-    server&.stop
-    thread&.kill
-    FileUtils.rm_rf(tmpdir)
   end
 end

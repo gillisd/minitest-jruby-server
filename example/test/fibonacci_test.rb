@@ -1,6 +1,7 @@
 require "test_helper"
 require "fibonacci"
 
+## Tests for Example::Fibonacci computation and sequences.
 class FibonacciTest < Minitest::Test
   def setup
     @fib = Example::Fibonacci.new

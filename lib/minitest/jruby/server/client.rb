@@ -3,6 +3,8 @@ require "drb"
 module Minitest
   module JRuby
     module Server
+      ## DRb client that connects to a running mt-server instance
+      ## and proxies test-run requests.
       class Client
         def initialize(config: Config.new)
           @config = config
@@ -15,12 +17,8 @@ module Minitest
                   "No server found at #{@config.uri_file}. Start one with: mt-server"
           end
 
-          uri = File.read(@config.uri_file).strip
-          begin
-            DRb.current_server
-          rescue DRb::DRbServerNotFound
-            DRb.start_service
-          end
+          uri = read_server_uri
+          start_drb_client
           @remote = DRbObject.new_with_uri(uri)
 
           @remote.ping
@@ -57,6 +55,16 @@ module Minitest
         end
 
         private
+
+        def read_server_uri
+          File.read(@config.uri_file).strip
+        end
+
+        def start_drb_client
+          DRb.current_server
+        rescue DRb::DRbServerNotFound
+          DRb.start_service
+        end
 
         def ensure_connected!
           raise ServerNotRunning, "Not connected. Call #connect first." unless connected?

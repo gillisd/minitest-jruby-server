@@ -36,7 +36,7 @@ class TestResultFormatter < Minitest::Test
 
   def test_print_summary_with_warmup_trend
     times = [1.0, 0.5, 0.2, 0.1, 0.05, 0.04]
-    @fmt.print_summary(times: times, runs: 6)
+    @fmt.print_summary(times: times)
     output = @io.string
 
     assert_match(/Fastest/, output)

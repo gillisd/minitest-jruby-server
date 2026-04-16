@@ -2,11 +2,7 @@
 require "bundler/setup"
 require "optparse"
 
-options = { runs: 1 }
-
-OptionParser.new do |opts|
-  opts.banner = "Usage: mt-client [options]"
-
+def add_connection_options(opts, options)
   opts.on("--uri-file PATH", "URI file location") do |v|
     options[:uri_file] = v
   end
@@ -14,7 +10,9 @@ OptionParser.new do |opts|
   opts.on("-s", "--seed SEED", Integer, "Random seed") do |v|
     options[:seed] = v
   end
+end
 
+def add_filter_options(opts, options)
   opts.on("-i", "--include PATTERN", "Include filter (/regexp/ or string)") do |v|
     options[:include_filter] = v
   end
@@ -26,7 +24,9 @@ OptionParser.new do |opts|
   opts.on("-r", "--runs N", Integer, "Number of iterations (default: 1)") do |v|
     options[:runs] = v
   end
+end
 
+def add_action_options(opts, options)
   opts.on("--info", "Show server info only") do
     options[:info] = true
   end
@@ -38,7 +38,9 @@ OptionParser.new do |opts|
   opts.on("-v", "--verbose", "Show full test output") do
     options[:verbose] = true
   end
+end
 
+def add_info_options(opts)
   opts.on("-h", "--help", "Show this help") do
     puts opts
     exit
@@ -46,25 +48,61 @@ OptionParser.new do |opts|
 
   opts.on("-V", "--version", "Show version") do
     require "minitest/jruby/server"
-    puts "mt-client #{Minitest::Jruby::Server::VERSION}"
+    puts "mt-client #{Minitest::JRuby::Server::VERSION}"
     exit
   end
-end.parse!
+end
+
+def parse_options
+  options = { runs: 1 }
+  OptionParser.new do |opts|
+    opts.banner = "Usage: mt-client [options]"
+    add_connection_options(opts, options)
+    add_filter_options(opts, options)
+    add_action_options(opts, options)
+    add_info_options(opts)
+  end.parse!
+  options
+end
+
+def run_iteration(client, options, index)
+  seed = options[:seed] ? options[:seed] + index : nil
+  client.run_tests(
+    seed: seed,
+    include_filter: options[:include_filter],
+    exclude_filter: options[:exclude_filter],
+  )
+end
+
+def print_verbose_output(result)
+  puts result[:output]
+  puts
+end
+
+def execute_runs(client, fmt, options)
+  times = []
+  options[:runs].times do |i|
+    result = run_iteration(client, options, i)
+    times << result[:time]
+    fmt.print_run_result(result)
+    print_verbose_output(result) if options[:verbose]
+  end
+  times
+end
+
+options = parse_options
 
 require "minitest/jruby/server"
 
-config = Minitest::Jruby::Server::Config.new(
+config = Minitest::JRuby::Server::Config.new(
   **options.slice(:uri_file, :project_root).compact,
 )
-client = Minitest::Jruby::Server::Client.new(config: config)
-fmt = Minitest::Jruby::Server::ResultFormatter.new
+client = Minitest::JRuby::Server::Client.new(config: config)
+fmt = Minitest::JRuby::Server::ResultFormatter.new
 
 begin
   client.connect
-rescue Minitest::Jruby::Server::ServerNotRunning => e
-  warn e.message
-  exit 1
-rescue Minitest::Jruby::Server::ConnectionError => e
+rescue Minitest::JRuby::Server::ServerNotRunning, Minitest::JRuby::Server::ConnectionError => e
   warn e.message
   exit 1
 end
@@ -82,23 +120,6 @@ end
 
 fmt.print_server_info(client.info)
 
-times = []
-options[:runs].times do |i|
-  seed = options[:seed] ? options[:seed] + i : nil
-  result = client.run_tests(
-    seed: seed,
-    include_filter: options[:include_filter],
-    exclude_filter: options[:exclude_filter],
-  )
+times = execute_runs(client, fmt, options)
 
-  t = result[:time]
-  times << t
-  fmt.print_run_result(result)
-
-  if options[:verbose]
-    puts result[:output]
-    puts
-  end
-end
-
-fmt.print_summary(times: times, runs: options[:runs]) if options[:runs] > 1
+fmt.print_summary(times: times) if options[:runs] > 1

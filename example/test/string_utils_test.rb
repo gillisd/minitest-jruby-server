@@ -1,6 +1,7 @@
 require "test_helper"
 require "string_utils"
 
+## Tests for Example::StringUtils transformations.
 class StringUtilsTest < Minitest::Test
   def setup
     @utils = Example::StringUtils.new

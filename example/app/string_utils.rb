@@ -1,9 +1,10 @@
 module Example
+  ## Common string transformations and queries.
   class StringUtils
-    def reverse(s) = s.reverse
-    def upcase(s) = s.upcase
-    def words(s) = s.split(/\s+/)
-    def palindrome?(s) = s == s.reverse
-    def char_count(s) = s.length
+    def reverse(str) = str.reverse
+    def upcase(str) = str.upcase
+    def words(str) = str.split(/\s+/)
+    def palindrome?(str) = str == str.reverse
+    def char_count(str) = str.length
   end
 end
